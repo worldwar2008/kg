@@ -25,6 +25,7 @@ from keras.optimizers import SGD, Adadelta
 pp = '../'
 color_type = 3
 mean_pixel = [103.939, 116.779, 123.68]
+random_state = 51
 
 def get_im(path):
     """图片像素调整,采用三通道的数据"""
@@ -82,9 +83,9 @@ def VGG_16(weights_path=None):
     # model.add(Dense(4096, activation='relu'))
     # model.add(Dropout(0.5))
     # model.add(Dense(1000, activation='softmax'))
-
     # if weights_path:
     #     model.load_weights(weights_path)
+
     assert os.path.exists(weights_path), "Model weights file not found (see 'weights_path' variable in script)"
     f = h5py.File(weights_path)
     for k in range(f.attrs['nb_layers']):
@@ -173,13 +174,13 @@ def read_model():
 
 
 def split_validation_set(train, target, test_size):
-    random_state = 51
+
     X_train, X_test, y_train, y_test = train_test_split(train, target, test_size=test_size, random_state=random_state)
     return X_train, X_test, y_train, y_test
 
 
 def split_validation_set_with_hold_out(train, target, test_size):
-    random_state = 51
+
     train, X_test, target, y_test = train_test_split(train, target, test_size=test_size, random_state=random_state)
     X_train, X_holdout, y_train, y_holdout = train_test_split(train, target, test_size=test_size,
                                                               random_state=random_state)
