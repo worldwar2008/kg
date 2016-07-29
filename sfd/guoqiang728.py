@@ -469,4 +469,5 @@ if __name__ == '__main__':
     # print get_driver_data()
     # load_train(224, 224, 3)
     #read_and_normalize_test_data(color_type=3)
+    print "good"
     run_cross_validation(2, 1, 0.25, '_vgg_16_2x20')
