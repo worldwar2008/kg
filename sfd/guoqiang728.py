@@ -91,7 +91,7 @@ def load_train(img_rows, img_cols, color_type=1):
 
 def load_test(img_rows, img_cols, color_type=1):
     print('Read other images')
-    path = os.path.join('..', 'rawdata', 'other', '*.jpg')
+    path = os.path.join('.', 'rawdata', 'test', '*.jpg')
     files = glob.glob(path)
     X_test = []
     X_test_id = []
@@ -226,6 +226,7 @@ def read_and_normalize_test_data(img_rows=224, img_cols=224, color_type=1):
         test_data = test_data.reshape(test_data.shape[0], color_type,
                                       img_rows, img_cols)
     else:
+        print "test_data.shape", test_data.shape
         test_data = test_data.transpose((0, 3, 1, 2))
 
     test_data = test_data.astype('float32')
@@ -329,7 +330,7 @@ def vgg_std16_model(img_rows, img_cols, color_type=1):
     model.add(Dense(10, activation='softmax'))
     # Learning rate is changed to 0.001
     sgd = SGD(lr=1e-3, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(optimizer=sgd, loss='categorical_crossentropy')
+    model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=["accuracy"])
     return model
 
 
@@ -360,13 +361,15 @@ def run_cross_validation(nfolds=10, nb_epoch=10, split=0.2, modelStr=''):
 
     # yfull_train = dict()
     # yfull_test = []
-    num_fold = 3
+    num_fold = 0
     kf = KFold(len(unique_drivers), n_folds=nfolds,
                shuffle=True, random_state=random_state)
 
     for train_drivers, test_drivers in kf:
 
         print('Start KFold number {} from {}'.format(num_fold, nfolds))
+        num_fold += 1
+
         model = vgg_std16_model(img_rows, img_cols, color_type_global)
         tmp_train_data = []
         tmp_train_target = []
@@ -401,10 +404,11 @@ def run_cross_validation(nfolds=10, nb_epoch=10, split=0.2, modelStr=''):
                   batch_size=batch_size,
                   nb_epoch=nb_epoch,
                   verbose=1,
-                  validation_split=(np.array(flatten_test_data), np.array(flatten_test_target)),
+                  validation_data=(np.array(flatten_test_data), np.array(flatten_test_target)),
                   shuffle=True)
 
     save_model(model, '', modelStr)
+    print "model.total_loss()", model.total_loss()
 
     # predictions_valid = model.predict(X_valid, batch_size=128, verbose=1)
     # score = log_loss(Y_valid, predictions_valid)
@@ -419,8 +423,11 @@ def run_cross_validation(nfolds=10, nb_epoch=10, split=0.2, modelStr=''):
 
     # model = read_model(index, modelStr)
     test_prediction = model.predict(test_data, batch_size=128, verbose=1)
-    score = model.evaluate(test_data, test_id, verbose=0)
-    yfull_test.append(test_prediction)
+    print "test_id"
+    print test_id
+    print "test_prediction"
+    print test_prediction
+
 
     info_string = 'loss_' + modelStr \
                   + '_r_' + str(img_rows) \
@@ -428,9 +435,7 @@ def run_cross_validation(nfolds=10, nb_epoch=10, split=0.2, modelStr=''):
                   + '_folds_' + str(nfolds) \
                   + '_ep_' + str(nb_epoch)
 
-    # test_res = merge_several_folds_mean(yfull_test, nfolds)
-    test_res = np.mean(yfull_test)
-    create_submission(test_res, test_id, score[0])
+    create_submission(test_prediction, test_id, "")
 
 
 def test_model_and_submit(start=1, end=1, modelStr=''):
@@ -463,4 +468,5 @@ def test_model_and_submit(start=1, end=1, modelStr=''):
 if __name__ == '__main__':
     # print get_driver_data()
     # load_train(224, 224, 3)
-    run_cross_validation(2, 20, 0.25, '_vgg_16_2x20')
+    #read_and_normalize_test_data(color_type=3)
+    run_cross_validation(2, 1, 0.25, '_vgg_16_2x20')
