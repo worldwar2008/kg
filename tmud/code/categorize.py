@@ -1,19 +1,30 @@
 import numpy as np  # linear algebra
 import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import re
+
+
 # Input data files are available in the "../input/" directory.
 # For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
-from subprocess import check_output
+# from subprocess import check_output
 
-print(check_output(["ls", "../input"]).decode("utf8"))
+# print(check_output(["ls", "../input"]).decode("utf8"))
 
 
 # Any results you write to the current directory are saved as output.
 
+def to_Poker(x):
+    # I have gone through 'almost' manually through existing categories and came up with this non-elegant regex
+    if re.search('([pP]oker)|([cC]hess)',
+                 x) is not None:
+        return 'Poker'
+    else:
+        return x
+
+
 def to_Games(x):
     # I have gone through 'almost' manually through existing categories and came up with this non-elegant regex
-    if re.search('([gG]am)|([pP]oker)|([cC]hess)|([pP]uzz)|([bB]all)|([pP]ursu)|([fF]ight)|([sS]imulat)|([sS]hoot)',
+    if re.search('([gG]am)|([pP]uzz)|([bB]all)|([pP]ursu)|([fF]ight)|([sS]imulat)|([sS]hoot)',
                  x) is not None:
         return 'Games'
     # Then I went through existing abbreviations like RPG, MMO and so on
@@ -42,6 +53,22 @@ def to_Family(x):
             '([fF]amili)|([mM]othe)|([fF]athe)|(bab)|([rR]elative)|([pP]regnan)|([pP]arent)|([mM]arriag)|([lL]ove)',
             x) is not None:
         return 'Family'
+    elif x in ['Maternal and child population']:
+        return 'Family'
+    else:
+        return x
+
+
+def to_Chat(x):
+    if x in ['IM', 'Tencent', 'weibo']:
+        return "Chat"
+    else:
+    return x
+
+
+def to_Meitu(x):
+    if re.search('([pP]icture)'):
+        return "Meitu"
     else:
         return x
 
@@ -60,7 +87,7 @@ def to_Fun(x):
                  ([fF]iction)|([pP]icture)|(joke)|([hH]oroscope)|([pP]assion)|([sS]tyle)|\
                  ([cC]ozy)|([bB]log)', x) is not None:
         return 'Fun'
-    if x in ['Parkour avoid class', 'community', 'Enthusiasm', 'cosplay', 'IM']:
+    if x in ['Parkour avoid class', 'community', 'Enthusiasm', 'cosplay']:
         return 'Fun'
     else:
         return x
@@ -130,7 +157,9 @@ def to_Video(x):
 
 
 def to_Shopping(x):
-    if x in ['Smart Shopping', 'online malls', 'online shopping by group, like groupon', 'takeaway ordering',
+    if re.search('[Ss]hopping'):
+        return 'Shopping'
+    elif x in ['Smart Shopping', 'online malls', 'online shopping by group, like groupon', 'takeaway ordering',
              'online shopping, price comparing', 'Buy class', 'Buy', 'shopping sharing',
              'Smart Shopping 1', 'online shopping navigation']:
         return 'Shopping'
@@ -138,14 +167,31 @@ def to_Shopping(x):
         return x
 
 
+def to_Entertainment(x):
+    if re.search('([Ee]ntertainment)'):
+        return 'Entertainment'
+    else:
+        return x
+
+def to_News(x):
+    if x in ['news', 'magazine and journal']:
+        return 'News'
+    else:
+        return x
+
+def to_Novel(x):
+    if x in ['novels','Jin Yong', 'literature']:
+        return 'Novel'
+    else:
+        return x
+
+
 def to_Education(x):
     if re.search('([eE]ducati)|([rR]ead)|([sS]cienc)|([bB]ooks)', x) is not None:
         return 'Education'
-    if x in ['literature', 'Maternal and child population', 'psychology', 'exams', 'millitary and wars', 'news',
-             'foreign language', 'magazine and journal', 'dictionary', 'novels', 'art and culture',
-             'Entertainment News',
-             'College Students', 'math', 'Western Mythology', 'Technology Information', 'study abroad',
-             'Chinese Classical Mythology']:
+    if x in ['psychology', 'exams', 'millitary and wars','Academic Information',
+             'foreign language','dictionary', 'art and culture',
+             'College Students', 'math', 'Western Mythology', 'Technology Information', 'study abroad']:
         return 'Education'
     else:
         return x
@@ -263,7 +309,6 @@ def to_Other(x):
              'Man playing favorites',
              'App Store',
              'Engineering Drawing',
-             'Academic Information',
              'Appliances',
              'Peace - Search',
              'Make-up application',
@@ -291,6 +336,7 @@ def to_Other(x):
     else:
         return x
 
+
 def get_categ():
     labels = pd.read_csv("../input/label_categories.csv")
     app_labels = pd.read_csv("../input/app_labels.csv")
@@ -317,7 +363,3 @@ def get_categ():
     apps['Travel_2'] = apps['general_groups'].apply(to_Travel_2)
     apps['Other'] = apps['general_groups'].apply(to_Other)
     return apps
-
-
-
-

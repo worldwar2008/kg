@@ -231,6 +231,7 @@ else:
     print('Restore train from cache!')
     (train_data, train_target) = restore_data(cache_path)
 
+
 batch_size = 64
 nb_classes = 10
 nb_epoch = 12

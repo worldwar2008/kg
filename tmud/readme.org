@@ -1,0 +1,67 @@
+#+OPTIONS: ^:nil
+* 介绍
+** 特征工程
+整理后,能够拿到的数据是?
+
+
+|event_id|           device_id|                 ts|longitude|latitude|              app_id|is_active|category|phone_brand|device_model|
+|--------|--------------------|-------------------|---------|--------|--------------------|---------|--------|-----------|------------|
+| 1376906|-1005647052671742462|2016-05-05 02:00:48|     0.00|    0.00|-1633873313139722876|        0|  Travel|       OPPO|       U705T|
+| 1376906|-1005647052671742462|2016-05-05 02:00:48|     0.00|    0.00| 7536856914263861653|        0|Services|       OPPO|       U705T|
+
+device_id 是逻辑主键,围绕着这个逻辑主键进行特征的提取;
+一个device_id可能对应多个event_id, 因为一个event_id可能上报多个app的信息;因此在计算相关数据的时候需要注意;
+*** 特征1: app数量\时间数\app类型数量\手机版本数量
+#+BEGIN_SRC python
+
+result = sqlContext.sql("select device_id, "
+                        "count(distinct app_id) app_num, "
+                        "count(distinct event_id) event_num, "
+                        "count(distinct category) cate_num, "
+                        "count(distinct device_model) model_num "
+                        " from tmud_main group by device_id sort by app_num desc")
+
+#+END_SRC
+*** 特征： 同一个类型的app，一个device-id安装了多个类似的
+这个特征反应一个用户的app的偏向特征，平时喜欢玩游戏呢还是听音乐，购物呢
+
+#+BEGIN_SRC python
+
+result = sqlContext.sql("select device_id, category, "
+                       "count(distinct app_id) num "
+                       "from tmud_main "
+                       "group by device_id, category")
+
+#+END_SRC
+*** 特征2: 所有app的上报时间的四位数特征
+由于一个手机装的可能是不同的app，每个app的使用时间不同，因而得到的特征可能比较泛；
+
+#+BEGIN_SRC python
+
+result_active_time = sqlContext.sql("select A.device_id as device_id, "
+                        "percentile_approx(hour(A.ts),0.5)  as active_50_time, "
+                        "percentile_approx(hour(A.ts),0.25)  as active_25_time, "
+                        "percentile_approx(hour(A.ts),0.75)  as active_75_time"
+                        "  from (select device_id,ts from tmud_main group by device_id,ts) A "
+                        "group by A.device_id")
+#+END_SRC
+*** 特征3: game-app的上报时间的四位数特征
+可以一个手机上，玩游戏的时间
+
+#+BEGIN_SRC python
+
+result_active_time = sqlContext.sql("select A.device_id as device_id, "
+                        "percentile_approx(hour(A.ts),0.5)  as active_50_time, "
+                        "percentile_approx(hour(A.ts),0.25)  as active_25_time, "
+                        "percentile_approx(hour(A.ts),0.75)  as active_75_time"
+                        "  from (select device_id,ts from tmud_main group by device_id,ts) A "
+                        "group by A.device_id")
+#+END_SRC
+
+
+
+** 其他
+
+http://www.07net01.com/2016/07/1600938.html
+
+我是如何快速拿下datacastle图像识别竞赛“猫狗大战”冠军的
