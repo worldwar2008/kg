@@ -10,13 +10,14 @@ import zipfile
 import time
 import shutil
 from sklearn.metrics import log_loss
+from categorize import get_categ
 
 random.seed(2016)
 
 def run_xgb(train, test, features, target, random_state=0):
-    eta = 0.1
-    max_depth = 3
-    subsample = 0.7
+    eta = 0.05
+    max_depth = 7 
+    subsample = 0.75
     colsample_bytree = 0.7
     start_time = time.time()
 
@@ -92,7 +93,36 @@ def read_train_test():
     print('Read events...')
     events = pd.read_csv("../input/events.csv", dtype={'device_id': np.str})
     events['counts'] = events.groupby(['device_id'])['event_id'].transform('count')
-    events_small = events[['device_id', 'counts']].drop_duplicates('device_id', keep='first')
+    #events_small = events[['device_id', 'counts']].drop_duplicates('device_id', keep='first')
+
+    # App events
+    app_events = pd.read_csv("../input/app_events.csv",dtype={"device_id": np.str})
+    del app_events['is_installed']
+    del app_events['is_active']
+
+    # App labels
+    # print 'Read app label...'
+    # app_label = pd.read_csv("../input/app_labels.csv", dtype={'device_id': np.str})
+    # app_events = pd.merge(app_events, app_label, how='left', on='app_id', left_index=True)
+    # app_events.fillna(0, inplace=True)
+    # app_events['game'] = [1 if (item<94 and item>1) else 0 for item in app_events['label_id']]
+    # app_events['game'] = app_events['game'] * app_events['is_active']
+    app_label = get_categ()
+    app_events = pd.merge(app_events, app_label, how='left', on='app_id')
+
+    # Events_small
+    #app_events = app_events[['event_id', 'game']]
+    app_events['game_count'] = app_events.groupby(['event_id'])['Games'].transform('sum')
+    app_events['video_count'] = app_events.groupby(['event_id'])['Video'].transform('sum')
+    app_events['edu_count'] = app_events.groupby(['event_id'])['Education'].transform('sum')
+    app_events['sport_count'] = app_events.groupby(['event_id'])['Sports'].transform('sum')
+    app_events['music_count'] = app_events.groupby(['event_id'])['Music'].transform('sum')
+    app_events = app_events[['event_id', 'game_count', 'video_count', 'edu_count', 'sport_count', 'music_count']].drop_duplicates('event_id', keep='first')
+
+    events = pd.merge(events, app_events, how='left', on='event_id', left_index=True)
+    #events['game_count'] = events.groupby(['device_id'])['game'].transform('sum')
+    events = events.drop(['game'], axis=1)
+    events_small = events[['device_id', 'counts', 'game_count', 'video_count', 'edu_count', 'sport_count', 'music_count']].drop_duplicates('device_id', keep='first')
 
     # Phone brand
     print('Read brands...')
