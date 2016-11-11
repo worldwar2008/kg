@@ -3,3 +3,4 @@
 *.txt
 *.csv
 *.h5
+.gitignore
