@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing,ensemble
+from sklearn.model_selection import cross_val_score
 
 # columns to be used as features #
 feature_cols = ["ind_empleado","pais_residencia","sexo","age", "ind_nuevo", "antiguedad", "nomprov", "segmento"]
@@ -45,10 +46,14 @@ if __name__ == "__main__":
     train_y = np.array(train_y.fillna(0)).astype('int')[start_index:,1:]
     print(train_X.shape, train_y.shape)
     print(test_X.shape)
-
+    
     print("Running Model..")
     model = ensemble.RandomForestClassifier(n_estimators=10, max_depth=10, min_samples_leaf=10, n_jobs=4, random_state=2016)
+    print "检查一下模型的能力："
+    scores = cross_val_score(model,train_x,train_y)
+    print "scores.mean():",scores.mean()
     model.fit(train_X, train_y)
+    
     del train_X, train_y
     print("Predicting..")
     preds = np.array(model.predict_proba(test_X))[:,:,1].T
