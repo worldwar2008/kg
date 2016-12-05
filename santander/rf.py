@@ -14,9 +14,9 @@ if __name__ == "__main__":
     train_file = data_path + "train_ver2.csv"
     test_file = data_path + "test_ver2.csv"
     train_size = 13647309
-    nrows = 1000000 # change this value to read more rows from train
+    nrows = 2000000 # change this value to read more rows from train
 
-    start_index = train_size - nrows    
+    start_index = train_size - nrows
     for ind, col in enumerate(feature_cols):
         print(col)
         train = pd.read_csv(train_file, usecols=[col])
@@ -25,12 +25,14 @@ if __name__ == "__main__":
         test.fillna(-99, inplace=True)
         if train[col].dtype == "object":
             le = preprocessing.LabelEncoder()
+            #针对同一列，进行object类型的编码
             le.fit(list(train[col].values) + list(test[col].values))
             temp_train_X = le.transform(list(train[col].values)).reshape(-1,1)[start_index:,:]
             temp_test_X = le.transform(list(test[col].values)).reshape(-1,1)
         else:
             temp_train_X = np.array(train[col]).reshape(-1,1)[start_index:,:]
             temp_test_X = np.array(test[col]).reshape(-1,1)
+
         if ind == 0:
             train_X = temp_train_X.copy()
             test_X = temp_test_X.copy()
@@ -86,4 +88,4 @@ if __name__ == "__main__":
                 break
         final_preds.append(" ".join(new_top_products))
     out_df = pd.DataFrame({'ncodpers':test_id, 'added_products':final_preds})
-    out_df.to_csv('sub_rf.csv', index=False)
+    out_df.to_csv('sub_rf_%d.csv'%(np.mean(scores)), index=False)
