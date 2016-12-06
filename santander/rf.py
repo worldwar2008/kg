@@ -14,7 +14,7 @@ if __name__ == "__main__":
     train_file = data_path + "train_ver2.csv"
     test_file = data_path + "test_ver2.csv"
     train_size = 13647309
-    nrows = 2000000 # change this value to read more rows from train
+    nrows = 10000000 # change this value to read more rows from train
 
     start_index = train_size - nrows
     for ind, col in enumerate(feature_cols):
@@ -23,7 +23,13 @@ if __name__ == "__main__":
         test = pd.read_csv(test_file, usecols=[col])
         train.fillna(-99, inplace=True)
         test.fillna(-99, inplace=True)
+        train.replace("         NA", -99,  inplace=True)
+        train.replace("NA", -99,  inplace=True)
+        test.replace("         NA", -99,  inplace=True)
+        test.replace("NA", -99,  inplace=True)
+        
         if train[col].dtype == "object":
+            print "%s's type is object"%col
             le = preprocessing.LabelEncoder()
             #针对同一列，进行object类型的编码
             le.fit(list(train[col].values) + list(test[col].values))
@@ -50,15 +56,19 @@ if __name__ == "__main__":
     print(test_X.shape)
     
     print("Running Model..")
-    model = ensemble.RandomForestClassifier(n_estimators=10, max_depth=10, min_samples_leaf=10, n_jobs=4, random_state=2016)
+    model = ensemble.RandomForestClassifier(n_estimators=10, max_depth=10, min_samples_leaf=10, n_jobs=15, random_state=2016)
     print "检查一下模型的能力："
     scores = cross_val_score(model,train_X,train_y)
-    print "scores.mean():",scores.mean()
+    mean_score = scores.mean()
+    print "scores.mean():",mean_score
     model.fit(train_X, train_y)
     
     del train_X, train_y
     print("Predicting..")
-    preds = np.array(model.predict_proba(test_X))[:,:,1].T
+    tmp_preds = model.predict_proba(test_X)
+    print np.array(tmp_preds[0]).shape
+    print np.array(tmp_preds[9]).head
+    preds = np.array(tmp_preds)[:,:,1].T
     del test_X
     
     print("Getting last instance dict..")
@@ -88,4 +98,4 @@ if __name__ == "__main__":
                 break
         final_preds.append(" ".join(new_top_products))
     out_df = pd.DataFrame({'ncodpers':test_id, 'added_products':final_preds})
-    out_df.to_csv('sub_rf_%d.csv'%(np.mean(scores)), index=False)
+    out_df.to_csv('sub_rf_%f.csv'%(mean_score), index=False)
