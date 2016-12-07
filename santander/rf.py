@@ -5,7 +5,7 @@ from sklearn import preprocessing,ensemble
 from sklearn.model_selection import cross_val_score
 
 # columns to be used as features #
-feature_cols = ["ind_empleado","pais_residencia","sexo","age", "ind_nuevo", "antiguedad", "nomprov", "segmento", "canal_entrada","renta"]
+feature_cols = ["ind_empleado","pais_residencia","sexo","age", "ind_nuevo", "antiguedad", "nomprov", "segmento", "canal_entrada","renta","ind_actividad_cliente"]
 dtype_list = {'ind_cco_fin_ult1': 'float16', 'ind_deme_fin_ult1': 'float16', 'ind_aval_fin_ult1': 'float16', 'ind_valo_fin_ult1': 'float16', 'ind_reca_fin_ult1': 'float16', 'ind_ctju_fin_ult1': 'float16', 'ind_cder_fin_ult1': 'float16', 'ind_plan_fin_ult1': 'float16', 'ind_fond_fin_ult1': 'float16', 'ind_hip_fin_ult1': 'float16', 'ind_pres_fin_ult1': 'float16', 'ind_nomina_ult1': 'float16', 'ind_cno_fin_ult1': 'float16', 'ncodpers': 'int64', 'ind_ctpp_fin_ult1': 'float16', 'ind_ahor_fin_ult1': 'float16', 'ind_dela_fin_ult1': 'float16', 'ind_ecue_fin_ult1': 'float16', 'ind_nom_pens_ult1': 'float16', 'ind_recibo_ult1': 'float16', 'ind_deco_fin_ult1': 'float16', 'ind_tjcr_fin_ult1': 'float16', 'ind_ctop_fin_ult1': 'float16', 'ind_viv_fin_ult1': 'float16', 'ind_ctma_fin_ult1': 'float16'}
 target_cols = ['ind_ahor_fin_ult1','ind_aval_fin_ult1','ind_cco_fin_ult1','ind_cder_fin_ult1','ind_cno_fin_ult1','ind_ctju_fin_ult1','ind_ctma_fin_ult1','ind_ctop_fin_ult1','ind_ctpp_fin_ult1','ind_deco_fin_ult1','ind_deme_fin_ult1','ind_dela_fin_ult1','ind_ecue_fin_ult1','ind_fond_fin_ult1','ind_hip_fin_ult1','ind_plan_fin_ult1','ind_pres_fin_ult1','ind_reca_fin_ult1','ind_tjcr_fin_ult1','ind_valo_fin_ult1','ind_viv_fin_ult1','ind_nomina_ult1','ind_nom_pens_ult1','ind_recibo_ult1'] 
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     train_file = data_path + "train_ver2.csv"
     test_file = data_path + "test_ver2.csv"
     train_size = 13647309
-    nrows = 10000000 # change this value to read more rows from train
+    nrows = 600000 # change this value to read more rows from train
 
     start_index = train_size - nrows
     for ind, col in enumerate(feature_cols):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     print(test_X.shape)
     
     print("Running Model..")
-    model = ensemble.RandomForestClassifier(n_estimators=10, max_depth=10, min_samples_leaf=10, n_jobs=15, random_state=2016)
+    model = ensemble.RandomForestClassifier(n_estimators=500, max_depth=4, min_samples_leaf=10, n_jobs=8, random_state=2016)
     print "检查一下模型的能力："
     scores = cross_val_score(model,train_X,train_y)
     mean_score = scores.mean()
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     print("Predicting..")
     tmp_preds = model.predict_proba(test_X)
     print np.array(tmp_preds[0]).shape
-    print np.array(tmp_preds[9]).head
+
     preds = np.array(tmp_preds)[:,:,1].T
     del test_X
     
